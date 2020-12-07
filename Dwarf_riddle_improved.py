@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 """
 Program: Dwarve riddle - probabilistic approach
 Author: Jonas Schumacher [jonas-schumacher on Github]
