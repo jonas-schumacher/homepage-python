@@ -30,6 +30,9 @@ num_days = 2000
 certainty_levels = [0.9,0.99,0.999,0.9999,0.99999,0.999999]
 
 
+# In[2]:
+
+
 """
 Set all possible states (as list) and fill transition matrix:
 """ 
