@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[1]:
-
-
 """
 Program: Floorplan
 Author: Jonas Schumacher [jonas-schumacher on Github]
@@ -16,22 +10,14 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import os
 
-
-# In[2]:
-
-
 def getCoordinates(x0, y0, length, angle):
     x1 = x0 + math.cos(math.radians(angle))*length
     y1 = y0 + math.sin(math.radians(angle))*length
     return x1,y1
 
-
-# In[3]:
-
-
 def calculateRoom(f):
     roomname = f.split('.')[0]
-    datatable = pd.read_excel('Input/'+f)    
+    datatable = pd.read_csv('Input/'+f, sep = ';')
 
     # Output is one line longer: in the first line there is only the starting point [0,0]
     output = pd.DataFrame(np.zeros(shape=(datatable.shape[0]+1,datatable.shape[1])), columns = ['x','y'])
@@ -90,12 +76,9 @@ def calculateRoom(f):
     plt.savefig('Output/' + str(roomname) + '.png')
 
 
-# In[4]:
-
-
-"""
-Read Excel Data
-"""
-for f in os.listdir('Input'):
-    calculateRoom(f)
-
+if __name__ == "__main__":
+    """
+    Read Excel Data
+    """
+    for f in os.listdir('Input'):
+        calculateRoom(f)
