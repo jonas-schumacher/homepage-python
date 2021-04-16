@@ -1,2 +1,2 @@
-# code for homepage
+# Python code for homepage
 more information on https://www.jonas-schumacher.com/
