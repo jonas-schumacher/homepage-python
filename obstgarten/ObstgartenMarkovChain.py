@@ -1,11 +1,3 @@
-"""
-Program: Obstgarten Markov Chain analysis
-Author: Jonas Schumacher [jonas-schumacher on Github]
-"""
-
-"""
-Import libraries
-"""
 import numpy as np
 import pandas as pd
 import sys
@@ -16,31 +8,27 @@ import datetime
 time_start = time.time()
 
 """
-Define possible states
+Set game parameters
+>> Uncomment the STRATEGY you want to use
+>> Caution: random calculation takes a long time due to additional calculations
 """
+NUM_FRUIT = 10
+NUM_RAVEN = 9
+NUM_BASKET = 2
+STRATEGY = 'positive'
+# STRATEGY = 'negative'
+# STRATEGY = 'random'
+
+"""
+Define and calculate all possible states (as a list):
+"""
+print('Initialize states:')
 print('definition: [fullest tree, 2nd fullest tree, 3rd fullest tree, emptiest tree, crow]')
 print('start: [10, 10, 10, 10, 9]')
 print('victory : [0, 0, 0, 0, x_e], where x_e > 0')
 print('defeat: [x_a, x_b, x_c, x_d, 0], where at least one x_i > 0')
 
-"""
-Set game parameters
->> Uncomment the strategy you want to use
->> Caution: random calculation takes a long time due to additional calculations
-"""
-num_fruit = 10
-num_raven = 9
-num_basket = 2
-strategy = 'positive'
-# strategy = 'negative'
-# strategy = 'random'
-
-"""
-Set all possible states (as list):
-"""
-print('Initialize all states ... ')
-
-current = [10, 10, 10, 10, 9]
+current = [NUM_FRUIT, NUM_FRUIT, NUM_FRUIT, NUM_FRUIT, NUM_RAVEN]
 states = []
 
 states_transitive = []
@@ -55,7 +43,7 @@ index_impossible = []
 
 counter = 0
 
-for a in range(num_fruit, -1, -1):
+for a in range(NUM_FRUIT, -1, -1):
     current[0] = a
     for b in range(a, -1, -1):
         current[1] = b
@@ -64,7 +52,7 @@ for a in range(num_fruit, -1, -1):
             for d in range(c, -1, -1):
                 current[3] = d
                 # e is the raven and therefore independent from the rest
-                for e in range(num_raven, -1, -1):
+                for e in range(NUM_RAVEN, -1, -1):
                     current[4] = e
 
                     # CASE DISTINCTION
@@ -116,18 +104,16 @@ Fill transition matrix:
 """
 Step 1: Calculate transition probabilities
 """
-print('Fill transitive states: ')
+print('Calculate transitive states: ')
 time_before = time.time()
-time_after = time.time()
 count = 0
 times = []
 
 for incoming in states_transitive:
     if count % 1000 == 0:
-        print(count)
         time_after = time.time()
         difference = time_after - time_before
-        # print(difference)
+        print("{} states calculated after {} seconds.".format(count, difference))
         times.append(difference)
         time_before = time_after
     count += 1
@@ -143,9 +129,9 @@ for incoming in states_transitive:
     All of these in-out-combinations get probability +1/6 (here +1, because we'll divide by 6 later) 
     """
     for i in range(0, 4):
-        outgoing = incoming[:]  # erzeuge Kopie
-        outgoing[i] = max(outgoing[i] - 1, 0)  # reduziere bestimmten Baum um eine Frucht
-        outgoing[0:4] = sorted(outgoing[0:4], reverse=True)  # sortiere BÃ¤ume absteigend
+        outgoing = incoming[:]  # create copy
+        outgoing[i] = max(outgoing[i] - 1, 0)  # reduce specific tree by one fruit
+        outgoing[0:4] = sorted(outgoing[0:4], reverse=True)  # sort trees in ascending order
 
         P.loc[str(incoming), str(outgoing)] = P.loc[str(incoming), str(outgoing)] + 1
 
@@ -159,22 +145,22 @@ for incoming in states_transitive:
 
     """
     Case 3: Basket: pick 2 fruits
-    - strategy "positive": always pick "fullest" tree
-    - strategy "negative": always pick "emptiest" tree
-    - strategy "random": pick tree randomly
+    - STRATEGY "positive": always pick "fullest" tree
+    - STRATEGY "negative": always pick "emptiest" tree
+    - STRATEGY "random": pick tree randomly
     """
 
     # Positive & negative relatively simple calculation
     outgoing = incoming[:]  # create copy
 
-    if strategy == 'positive':
-        for i in range(0, num_basket):
+    if STRATEGY == 'positive':
+        for i in range(0, NUM_BASKET):
             outgoing[0] = max(outgoing[0] - 1, 0)  # reduce 1st (fullest) tree
             outgoing[0:4] = sorted(outgoing[0:4], reverse=True)  # re-sort tree in descending order
         P.loc[str(incoming), str(outgoing)] = P.loc[str(incoming), str(outgoing)] + 1
 
-    elif strategy == 'negative':
-        for i in range(0, num_basket):
+    elif STRATEGY == 'negative':
+        for i in range(0, NUM_BASKET):
             if outgoing[3] != 0:  # reduce emptiest tree (index = 3), if possible
                 outgoing[3] = max(outgoing[3] - 1, 0)
             elif outgoing[2] != 0:  # otherwise the 2nd emptiest, etc.
@@ -187,13 +173,13 @@ for incoming in states_transitive:
         P.loc[str(incoming), str(outgoing)] = P.loc[str(incoming), str(outgoing)] + 1
 
     # Now it's getting complicated: there are several possible outgoing states
-    elif strategy == 'random':
+    elif STRATEGY == 'random':
         current_outgoing_list = []
 
-        # Create nested list with one layer (consisting of outgoing state and proba) for each element in the basket
+        # Create nested list with one layer (consisting of outgoing state and prob) for each element in the basket
         current_outgoing_list.append([[outgoing, 1]])
 
-        for i in range(0, num_basket):
+        for i in range(0, NUM_BASKET):
 
             # Append new list to main list for every basket
             current_outgoing_list.append([])
@@ -254,11 +240,11 @@ for incoming in states_transitive:
 
         # The list contains the relevant states at the very end
         # With 2 baskets we have 4*4 possible outgoing states (some appear multiple times)
-        # Plausbility check: all probas must add up to 1
+        # Plausibility check: all probs must add up to 1
 
         outgoing_dict = {}
-        # Access elements at the end of the list [num_basket]
-        for jga in current_outgoing_list[num_basket]:
+        # Access elements at the end of the list [NUM_BASKET]
+        for jga in current_outgoing_list[NUM_BASKET]:
             outgoing = jga[0].copy()
             outgoing_str = str(outgoing)
             if outgoing_str in outgoing_dict:
@@ -296,30 +282,26 @@ problematic_rows = (row_sum.values != 1.0).sum()
 # print(problematic_rows)
 
 # Failing plausi-check might be due to rounding errors (because of dividing by 6)!
-if (problematic_rows == 0):
-    print('plausi-check passed')
+if problematic_rows == 0:
+    print('plausibility check passed')
 else:
-    print('plausi-check failed')
-
+    print('plausibility check failed')
 
 
 """
 Calculate probability for entering the stationary set
 >> It suffices to calculate the winning probability
 """
-
-
 # The transitive matrix is always the same
 P_transitive = P.iloc[index_transitive, index_transitive].copy(deep=True)
 P_transitive = P_transitive - np.identity(P_transitive.shape[0])
-# P_transitiv.head()
 
 """
-Iterate over all victorial states:
+Iterate over all victorious states:
 """
-winning_proba = 0
+winning_prob = 0
 for relevant in states_victory:
-    print('Analyze victory state ' + str(relevant) + ' = ', end='')
+    print('Analyze victorious state ' + str(relevant) + ' = ', end='')
 
     # Write relevant column - i.e. the result vector
     relevant_column = P.iloc[index_transitive, states.index(relevant)].copy(deep=True)
@@ -330,11 +312,10 @@ for relevant in states_victory:
     x = np.linalg.solve(P_transitive.apply(pd.to_numeric).values, -relevant_column.apply(pd.to_numeric).values)
 
     print('{:.2f}'.format(round(100 * x[0], 2)) + '%')
-    winning_proba += x[0]
+    winning_prob += x[0]
 print('Winning probability with start in state ' + str(states[0]) + ' = ')
-print('{:.2f}'.format(round(100 * winning_proba, 2)) + '%')
+print('{:.2f}'.format(round(100 * winning_prob, 2)) + '%')
 
 time_end = time.time()
 time_overall = time_end - time_start
 print('Overall duration of analysis: ' + str(datetime.timedelta(seconds=time_overall)))
-

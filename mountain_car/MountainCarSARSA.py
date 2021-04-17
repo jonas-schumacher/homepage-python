@@ -3,27 +3,28 @@ import matplotlib.pyplot as plt
 import time
 from tiles3 import tiles, IHT
 
-limit_x_pos = (-1.2, .5)
-limit_x_vel = (-.07, .07)
+LIMIT_X_POS = (-1.2, .5)
+LIMIT_X_VEL = (-.07, .07)
 
 """
 Create code tilings for state approximation:
 """
-maxSize = 2048
-iht = IHT(maxSize)
-numTilings = 8
+MAX_SIZE = 2048
+NUM_TILINGS = 8
+
+iht = IHT(MAX_SIZE)
 
 
 def mytiles(x, y):
-    scale_factor_x = 10.0 / (limit_x_pos[1] - limit_x_pos[0])
-    scale_factor_y = 10.0 / (limit_x_vel[1] - limit_x_vel[0])
-    return tiles(iht, numTilings, list((x * scale_factor_x, y * scale_factor_y)))
+    scale_factor_x = 10.0 / (LIMIT_X_POS[1] - LIMIT_X_POS[0])
+    scale_factor_y = 10.0 / (LIMIT_X_VEL[1] - LIMIT_X_VEL[0])
+    return tiles(iht, NUM_TILINGS, list((x * scale_factor_x, y * scale_factor_y)))
 
 
 def plot_current_solution(weights, state_history, num_counter):
     resolution = 50
-    x = np.outer(np.linspace(limit_x_pos[0], limit_x_pos[1], resolution), np.ones(resolution))
-    y = np.outer(np.linspace(limit_x_vel[0], limit_x_vel[1], resolution), np.ones(resolution)).T
+    x = np.outer(np.linspace(LIMIT_X_POS[0], LIMIT_X_POS[1], resolution), np.ones(resolution))
+    y = np.outer(np.linspace(LIMIT_X_VEL[0], LIMIT_X_VEL[1], resolution), np.ones(resolution)).T
     z = np.zeros_like(x)
     for i in range(resolution):
         for j in range(resolution):
@@ -100,18 +101,18 @@ class Environment:
         next_vel = current_vel + .001 * current_action - .0025 * np.cos(3 * current_pos)
 
         # Keep velocity bounded
-        if next_vel < limit_x_vel[0]:
-            next_vel = limit_x_vel[0]
-        elif next_vel > limit_x_vel[1]:
-            next_vel = limit_x_vel[1]
+        if next_vel < LIMIT_X_VEL[0]:
+            next_vel = LIMIT_X_VEL[0]
+        elif next_vel > LIMIT_X_VEL[1]:
+            next_vel = LIMIT_X_VEL[1]
 
         # Keep position bounded
         # Left bound reached: set back to bound and vel = 0
-        if next_pos < limit_x_pos[0]:
-            next_pos = limit_x_pos[0]
+        if next_pos < LIMIT_X_POS[0]:
+            next_pos = LIMIT_X_POS[0]
             next_vel = 0
         # Right bound reached: end of episode!
-        elif next_pos > limit_x_pos[1]:
+        elif next_pos > LIMIT_X_POS[1]:
             reward = self.reward_on_success
             episode_ended = True
 
@@ -132,7 +133,7 @@ def train():
     # Set Training parameters
     gamma = 1.0  # discount
     epsilon = 0.05  # exploration rate: not really needed
-    alpha = 0.1 / numTilings  # step size
+    alpha = 0.1 / NUM_TILINGS  # step size
     trace_decay_param = .9  # parameter lambda in eligibility traces
     env = Environment()
 
@@ -140,8 +141,8 @@ def train():
     actions = env.get_admissible_actions()
 
     # Initialize weight and trace vector
-    weights = np.zeros((maxSize, len(actions)))
-    traces = np.zeros((maxSize, len(actions)))
+    weights = np.zeros((MAX_SIZE, len(actions)))
+    traces = np.zeros((MAX_SIZE, len(actions)))
 
     counter_history = []
 

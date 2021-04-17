@@ -1,52 +1,46 @@
-"""
-Program: Obstgarten Monte Carlo Simulation
-Author: Jonas Schumacher [jonas-schumacher on Github]
-"""
-
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 import time
 import datetime
 
 """
-Define possible states
+Set game parameters
+"""
+NUM_FRUIT = 10
+NUM_RAVEN = 9
+NUM_BASKET = 2
+STRATEGY = 'positive'
+# STRATEGY = 'negative'
+# STRATEGY = 'random'
+
+"""
+Set simulation parameters
+"""
+NUM_SIM = 10 ** 5
+SEED = 54321
+rng = np.random.RandomState(seed=SEED)
+
+trees = ['cherry', 'apple', 'pear', 'plum']
+
+"""
+Interpretation of possible states
 """
 print('definition: [cherry tree, apple tree, pear tree, plum tree, crow]')
 print('start: [10, 10, 10, 10, 9]')
 print('victory : [0, 0, 0, 0, x_e], where x_e > 0')
 print('defeat: [x_a, x_b, x_c, x_d, 0], where at least one x_i > 0')
 
-"""
-Set game parameters
-"""
-num_fruit = 10
-num_raven = 9
-num_basket = 2
-strategy = 'positive'
-# strategy = 'negative'
-# strategy = 'random'
-
-"""
-Set simulation parameters
-"""
-num_sim = 10**5
-seed = 54321
-rng = np.random.RandomState(seed=seed)
-
-trees = ['cherry', 'apple', 'pear', 'plum']
 
 """
 Function A: Throw dice based on next pseudo random number
 """
 
 
-def throwDice():
+def throw_dice():
     # Generate random integer between 1 and 6
     global rng
     number = rng.randint(1, 7)
 
-    result = 'error'
     if number == 1:
         result = 'cherry'
     elif number == 2:
@@ -71,7 +65,7 @@ Function B: One whole game
 
 def game():
     # Initialize state
-    state = {'cherry': num_fruit, 'apple': num_fruit, 'pear': num_fruit, 'plum': num_fruit, 'raven': num_raven}
+    state = {'cherry': NUM_FRUIT, 'apple': NUM_FRUIT, 'pear': NUM_FRUIT, 'plum': NUM_FRUIT, 'raven': NUM_RAVEN}
     game_end = False
     victory = False
 
@@ -79,22 +73,22 @@ def game():
 
     # Solange das Spiel nicht vorbei ist, fÃ¼hre weitere Runde durch
     while not game_end:
-        symbol = throwDice()
+        symbol = throw_dice()
         count_num_dice += 1
 
         # Special case: basket
         if symbol == 'basket':
 
             # Harvest "num_baket" fruits
-            for i in range(num_basket):
+            for i in range(NUM_BASKET):
                 # Select default fruit
                 selection = 'cherry'
 
                 """
-                Case distinction as a funtion of chosen strategy
+                Case distinction as a funtion of chosen STRATEGY
                 """
                 # Always select "fullest" tree
-                if strategy == 'positive':
+                if STRATEGY == 'positive':
                     remaining_fruits = 0
                     for t in trees:
                         if state[t] > remaining_fruits:
@@ -102,15 +96,15 @@ def game():
                             remaining_fruits = state[t]
 
                 # Always select "emptiest" tree (provided it's not really empty)
-                elif strategy == 'negative':
-                    remaining_fruits = num_fruit
+                elif STRATEGY == 'negative':
+                    remaining_fruits = NUM_FRUIT
                     for t in trees:
-                        if state[t] <= remaining_fruits and state[t] > 0:
+                        if remaining_fruits >= state[t] > 0:
                             selection = t
                             remaining_fruits = state[t]
 
                 # Select any tree
-                elif strategy == 'random':
+                elif STRATEGY == 'random':
                     tree_options = []
 
                     # Only include non-empty trees
@@ -163,7 +157,7 @@ if __name__ == "__main__":
     history = []
     count_num_dice = 0
 
-    for s in range(1, num_sim + 1):
+    for s in range(1, NUM_SIM + 1):
         if s % 1000 == 0:
             prob = num_victories / s
             history.append(prob)
@@ -175,16 +169,16 @@ if __name__ == "__main__":
         if victory:
             num_victories += 1
 
-    prob = num_victories / num_sim
+    prob = num_victories / NUM_SIM
     print('Final winning probability: ' + str(prob) + ' = ' + '{:.2f}'.format(round(100 * prob, 2)) + '%')
-    print('Average number of dice thrown per round: ' + str(count_num_dice / num_sim))
+    print('Average number of dice thrown per round: ' + str(count_num_dice / NUM_SIM))
 
     skip = 1
 
-    plt.plot(range(1, int(s / 1000 + 1), 1)[skip:], [100 * i for i in history][skip:])
+    plt.plot(range(1, int(NUM_SIM / 1000 + 1), 1)[skip:], [100 * i for i in history][skip:])
     plt.xlabel('Number of iterations [$\cdot 10^3$]')
     plt.ylabel('Winning probability [%]')
-    plt.savefig('MC_Simulation_' + strategy + '_strategy_' + str(num_sim) + '_runs.png')
+    plt.savefig('MC_Simulation_' + STRATEGY + '_strategy_' + str(NUM_SIM) + '_runs.png')
     plt.show()
 
     time_end = time.time()

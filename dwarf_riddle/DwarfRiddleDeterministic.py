@@ -10,8 +10,8 @@ time_start = time.time()
 """
 Set game parameters:
 """
-NUM_DWARVES = 100    # number of dwarves who have been to the central hall already
-NUM_DAYS = 18000
+NUM_DWARVES = 10    # number of dwarves who have been to the central hall already
+NUM_DAYS = 200
 CERTAINTY_LEVELS = [0.1, 0.9, 0.99, 0.999, 0.9999, 0.99999, 0.999999]
 
 """
