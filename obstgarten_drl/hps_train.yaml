@@ -1,0 +1,26 @@
+
+env:
+  NUM_FRUIT: 10
+  NUM_RAVEN: 9
+  NUM_BASKET: 2
+  NUM_TREE: 4
+  TREES: ['cherry', 'apple', 'pear', 'plum']
+  SEED: 123
+
+agent:
+  BATCHES: 20
+  ITERATIONS_PER_BATCH: 5000
+  GAMMA: 1
+  ONE_HOT: False
+
+dqn:
+  LR: 0.0005
+  BATCH_SIZE: 5000
+  REPLAY_START_SIZE: 50000
+  REPLAY_SIZE: 500000
+  HIDDEN_SIZE: [100,50]
+  eps:
+    STRATEGY: "exponential"  # type of decay: constant, linear, exponential
+    START: 1.0
+    FINAL: 0.0
+    SHARE: 0.99

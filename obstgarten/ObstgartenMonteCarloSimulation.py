@@ -71,7 +71,7 @@ def game():
 
     global count_num_dice
 
-    # Solange das Spiel nicht vorbei ist, fÃ¼hre weitere Runde durch
+    # As long as game is not over, perform another move
     while not game_end:
         symbol = throw_dice()
         count_num_dice += 1
@@ -79,13 +79,13 @@ def game():
         # Special case: basket
         if symbol == 'basket':
 
-            # Harvest "num_baket" fruits
+            # Harvest "num_basket" fruits
             for i in range(NUM_BASKET):
                 # Select default fruit
                 selection = 'cherry'
 
                 """
-                Case distinction as a funtion of chosen STRATEGY
+                Case distinction as a function of chosen STRATEGY
                 """
                 # Always select "fullest" tree
                 if STRATEGY == 'positive':
