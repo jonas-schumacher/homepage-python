@@ -7,12 +7,12 @@ class Obstgarten:
 
         self.rng = np.random.default_rng()
         self.hps = hps
-        if self.hps['agent']['ONE_HOT']:
-            self.num_states_one_hot = hps['env']['NUM_TREE'] * (hps['env']['NUM_FRUIT'] + 1) + (
-                        hps['env']['NUM_RAVEN'] + 1)
+        if self.hps['agent']['one_hot_state']:
+            self.num_states_one_hot = hps['env']['num_tree'] * (hps['env']['num_fruit'] + 1) + (
+                        hps['env']['num_raven'] + 1)
         else:
-            self.num_states = hps['env']['NUM_TREE'] + 1
-        self.num_actions = hps['env']['NUM_TREE']
+            self.num_states = hps['env']['num_tree'] + 1
+        self.num_actions = hps['env']['num_tree']
         self.state = None
         self.remaining_baskets_to_choose = 0
 
@@ -49,11 +49,11 @@ class Obstgarten:
         return game_end, reward
 
     def initialize_game(self):
-        self.state = {'cherry': self.hps['env']['NUM_FRUIT'],
-                      'apple': self.hps['env']['NUM_FRUIT'],
-                      'pear': self.hps['env']['NUM_FRUIT'],
-                      'plum': self.hps['env']['NUM_FRUIT'],
-                      'raven': self.hps['env']['NUM_RAVEN']}
+        self.state = {'cherry': self.hps['env']['num_fruit'],
+                      'apple': self.hps['env']['num_fruit'],
+                      'pear': self.hps['env']['num_fruit'],
+                      'plum': self.hps['env']['num_fruit'],
+                      'raven': self.hps['env']['num_raven']}
 
         reward = 0
         game_end = False
@@ -66,13 +66,13 @@ class Obstgarten:
             symbol = self.throw_dice()
 
         if symbol == "basket":
-            self.remaining_baskets_to_choose = self.hps['env']['NUM_BASKET']
+            self.remaining_baskets_to_choose = self.hps['env']['num_basket']
 
         return np.fromiter(self.state.values(), dtype=int), reward, game_end
 
     def continue_game(self, action):
         # Perform action chosen by agent
-        symbol = self.hps['env']['TREES'][action]
+        symbol = self.hps['env']['tree_names'][action]
         self.state[symbol] = max(0, self.state[symbol] - 1)
         self.remaining_baskets_to_choose -= 1
 
@@ -93,6 +93,6 @@ class Obstgarten:
             symbol = self.throw_dice()
 
         if symbol == "basket":
-            self.remaining_baskets_to_choose = self.hps['env']['NUM_BASKET']
+            self.remaining_baskets_to_choose = self.hps['env']['num_basket']
 
         return np.fromiter(self.state.values(), dtype=int), reward, game_end

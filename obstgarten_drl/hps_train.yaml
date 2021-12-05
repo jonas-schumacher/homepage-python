@@ -1,26 +1,27 @@
 
 env:
-  NUM_FRUIT: 10
-  NUM_RAVEN: 9
-  NUM_BASKET: 2
-  NUM_TREE: 4
-  TREES: ['cherry', 'apple', 'pear', 'plum']
-  SEED: 123
+  num_fruit: 10
+  num_raven: 9
+  num_basket: 2
+  num_tree: 4
+  tree_names: [ 'cherry', 'apple', 'pear', 'plum']
+  seed: 123
 
 agent:
-  BATCHES: 20
-  ITERATIONS_PER_BATCH: 5000
-  GAMMA: 1
-  ONE_HOT: False
+  type: "trained"  # "positive", "negative", "random", "trained"
+  batches: 10
+  games_per_batch: 20000
+  gamma: 1
+  one_hot_state: False
 
 dqn:
-  LR: 0.0005
-  BATCH_SIZE: 5000
-  REPLAY_START_SIZE: 50000
-  REPLAY_SIZE: 500000
-  HIDDEN_SIZE: [100,50]
+  lr: 0.0005
+  batch_size: 5000
+  replay_start_size: 50000
+  replay_size: 500000
+  hidden_size: [50,20]
   eps:
-    STRATEGY: "exponential"  # type of decay: constant, linear, exponential
-    START: 1.0
-    FINAL: 0.0
-    SHARE: 0.99
+    strategy: "exponential"  # type of decay: constant, linear, exponential
+    start: 1.0
+    final: 0.1
+    share: 0.9

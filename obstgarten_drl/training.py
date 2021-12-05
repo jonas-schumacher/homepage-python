@@ -4,7 +4,7 @@ import yaml
 import time
 from datetime import datetime
 
-from agent import Agent
+from agent import Agent, PositiveAgent, NegativeAgent, RandomAgent
 from environment import Obstgarten
 
 if __name__ == '__main__':
@@ -19,17 +19,27 @@ if __name__ == '__main__':
     SMOOTHING_WINDOW_LENGTH = 10
 
     env = Obstgarten(hps)
-    agent = Agent(hps, env)
+    if hps['agent']['type'] == "positive":
+        agent = PositiveAgent(hps, env)
+    elif hps['agent']['type'] == "negative":
+        agent = NegativeAgent(hps, env)
+    elif hps['agent']['type'] == "random":
+        agent = RandomAgent(hps, env)
+    else:
+        agent = Agent(hps, env)
 
     current_time = datetime.now().strftime('%Y%m%d-%H%M%S')
 
     """
-    TRAIN
+    TRAINING
     """
-    score_outer = np.zeros(hps['agent']['BATCHES'], dtype=float)
-    score_inner = np.zeros(hps['agent']['ITERATIONS_PER_BATCH'], dtype=float)
+    score_outer = np.zeros(hps['agent']['batches'], dtype=float)
+    score_inner = np.zeros(hps['agent']['games_per_batch'], dtype=float)
     iter_games = 0
     for batch_index in range(len(score_outer)):
+        if batch_index == len(score_outer)-1:
+            agent.evaluation_mode = True
+            print("Switch to evaluation mode")
         for iter_index in range(len(score_inner)):
             # Get initial state from the environment
             state, reward, game_end = env.initialize_game()
@@ -52,7 +62,7 @@ if __name__ == '__main__':
 
     agent.finish_interaction()
     """
-    EVAL
+    PLOT TRAINING PROGRESS
     """
     fig, ax = plt.subplots()
     plt.plot(score_outer, color=PLOT_COLORS[0], alpha=0.3)
@@ -61,12 +71,11 @@ if __name__ == '__main__':
     score_smoothed = np.concatenate((score_outer[:SMOOTHING_WINDOW_LENGTH - 1], score_smoothed))
     ax.plot(score_smoothed, label="Average reward (= winning probability)", color=PLOT_COLORS[0])
 
-    plt.xlabel("Iterations of {} games".format(
-        hps['agent']['ITERATIONS_PER_BATCH']))
+    plt.xlabel(f"Iterations of {hps['agent']['games_per_batch']} games")
     plt.ylabel("Winning probability")
     plt.legend()
     plt.show()
-    fig.savefig("obstgarten" + "-" + current_time)
+    fig.savefig(f"obstgarten-{current_time}")
 
     duration = time.time() - start_time
-    print("Overall time: {} minutes".format(np.round(duration / 60.0, decimals=2)))
+    print(f"Overall time: {np.round(duration / 60.0, decimals=2)} minutes")

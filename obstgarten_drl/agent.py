@@ -32,28 +32,29 @@ class Agent:
         self.train_count = 0
         self.decision_count = 0
         self.rng = np.random.default_rng()
+        self.evaluation_mode = False
 
         self.actor = DQNNetwork(num_inputs=self.env.num_states,
                                 num_actions=self.env.num_actions,
-                                hidden=self.hps['dqn']['HIDDEN_SIZE'],
+                                hidden=self.hps['dqn']['hidden_size'],
                                 hps=self.hps)
         self.target = DQNNetwork(num_inputs=self.env.num_states,
                                  num_actions=self.env.num_actions,
-                                 hidden=self.hps['dqn']['HIDDEN_SIZE'],
+                                 hidden=self.hps['dqn']['hidden_size'],
                                  hps=self.hps)
 
-        self.actor_opt = torch.optim.Adam(self.actor.parameters(), lr=self.hps['dqn']['LR'])
+        self.actor_opt = torch.optim.Adam(self.actor.parameters(), lr=self.hps['dqn']['lr'])
 
-        self.buffer = ExperienceBuffer(capacity=self.hps['dqn']['REPLAY_SIZE'])
+        self.buffer = ExperienceBuffer(capacity=self.hps['dqn']['replay_size'])
         self.state = None
         self.action = None
 
         self.epsilon_schedule = epsilon_decay_schedule(
-            decay_type=self.hps['dqn']['eps']['STRATEGY'],
-            total_steps=self.hps['agent']['BATCHES'] * self.hps['agent']['ITERATIONS_PER_BATCH'],
-            init_epsilon=self.hps['dqn']['eps']['START'],
-            min_epsilon=self.hps['dqn']['eps']['FINAL'],
-            decay_share=self.hps['dqn']['eps']['SHARE'])
+            decay_type=self.hps['dqn']['eps']['strategy'],
+            total_steps=self.hps['agent']['batches'] * self.hps['agent']['games_per_batch'],
+            init_epsilon=self.hps['dqn']['eps']['start'],
+            min_epsilon=self.hps['dqn']['eps']['final'],
+            decay_share=self.hps['dqn']['eps']['share'])
 
         self.epsilon = self.epsilon_schedule[0]
 
@@ -61,17 +62,21 @@ class Agent:
 
         self.decision_count += 1
 
-        if self.hps['agent']['ONE_HOT']:
+        if self.hps['agent']['one_hot_state']:
             state_input = np.array([], dtype=int)
             for s in state[:-1]:
-                fruit = np.zeros(shape=self.hps['env']['NUM_FRUIT'] + 1, dtype=int)
+                fruit = np.zeros(shape=self.hps['env']['num_fruit'] + 1, dtype=int)
                 fruit[s] = 1
                 state_input = np.concatenate((state_input, fruit))
-            raven = np.zeros(shape=self.hps['env']['NUM_RAVEN'] + 1, dtype=int)
+            raven = np.zeros(shape=self.hps['env']['num_raven'] + 1, dtype=int)
             raven[state[-1]] = 1
             state_input = np.concatenate((state_input, raven))
         else:
             state_input = state
+
+        # In evaluation mode, always go for the greedy action
+        if self.evaluation_mode:
+            return self.actor.sample_action(state_input)
 
         if self.rng.random() < self.epsilon:
             action = self.rng.choice(a=self.env.num_actions, replace=False)
@@ -92,13 +97,17 @@ class Agent:
         return action
 
     def finish_game(self, reward):
+        # In evaluation mode, skip training
+        if self.evaluation_mode:
+            return None
+
         exp = Experience(state=self.state,
                          action=self.action,
                          reward=reward,
                          next_state=np.ones_like(a=self.state),
                          done=True)
         self.buffer.append(exp)
-        if len(self.buffer) >= self.hps['dqn']['REPLAY_START_SIZE']:
+        if len(self.buffer) >= self.hps['dqn']['replay_start_size']:
             # Reduce exploring parameter
             self.epsilon = self.epsilon_schedule[self.game_count]
 
@@ -117,7 +126,7 @@ class Agent:
 
         # Sample a mini-batch from the replay buffer
         obs_batch, action_batch, reward_batch, next_obs_batch, done_batch = \
-            self.buffer.sample(self.hps['dqn']['BATCH_SIZE'])
+            self.buffer.sample(self.hps['dqn']['batch_size'])
         obs_batch = torch.tensor(obs_batch, dtype=torch.float32)
         action_batch = torch.tensor(action_batch, dtype=torch.int64)
         reward_batch = torch.tensor(reward_batch, dtype=torch.float32)
@@ -132,7 +141,7 @@ class Agent:
         with torch.no_grad():
             target_q_values = self.target.get_max_value(next_obs_batch)
             target_q_values[done_batch] = 0.0
-            target_q_values = reward_batch + self.hps['agent']['GAMMA'] * target_q_values.detach()
+            target_q_values = reward_batch + self.hps['agent']['gamma'] * target_q_values.detach()
 
         loss = torch.nn.MSELoss()(q_values, target_q_values)
 
@@ -143,3 +152,36 @@ class Agent:
         print("Number of training steps: {}".format(self.train_count))
         print("Number of games played: {}".format(self.game_count))
         print("Number of decision: {}".format(self.decision_count))
+
+
+class RandomAgent(Agent):
+    def __init__(self, hps, env):
+        super().__init__(hps, env)
+
+    def choose_fruit(self, state, reward, is_first):
+        action = self.rng.choice(self.hps['env']['num_tree'])
+        return action
+
+    def finish_game(self, reward):
+        pass
+
+    def finish_interaction(self):
+        pass
+
+
+class PositiveAgent(RandomAgent):
+    def __init__(self, hps, env):
+        super().__init__(hps, env)
+
+    def choose_fruit(self, state, reward, is_first):
+        action = np.argmax(state[:-1])
+        return action
+
+
+class NegativeAgent(RandomAgent):
+    def __init__(self, hps, env):
+        super().__init__(hps, env)
+
+    def choose_fruit(self, state, reward, is_first):
+        action = np.argmin(state[:-1])
+        return action
