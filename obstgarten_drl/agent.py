@@ -73,10 +73,14 @@ class Agent:
             state_input = np.concatenate((state_input, raven))
         else:
             state_input = state
+            if self.hps['agent']['additional_input']:
+                fullest_tree = np.argmax(state[:-1])
+                state_input = np.concatenate((state_input, np.array([fullest_tree])))
 
         # In evaluation mode, always go for the greedy action
         if self.evaluation_mode:
-            return self.actor.sample_action(state_input)
+            action = self.actor.sample_action(state_input)
+            return action
 
         if self.rng.random() < self.epsilon:
             action = self.rng.choice(a=self.env.num_actions, replace=False)
@@ -112,12 +116,12 @@ class Agent:
             self.epsilon = self.epsilon_schedule[self.game_count]
 
             # Train network
-            if self.game_count % 10 == 0:
+            if self.game_count % self.hps['dqn']['skip_train'] == 0:
                 self.train_network()
                 self.train_count += 1
 
             # Copy weights from trained to target net
-            if self.game_count % 100 == 0:
+            if self.game_count % self.hps['dqn']['skip_copy'] == 0:
                 self.target.load_state_dict(self.actor.state_dict())
         self.game_count += 1
 

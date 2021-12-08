@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import torch
 import yaml
 import time
 from datetime import datetime
@@ -16,7 +17,6 @@ if __name__ == '__main__':
     print(hps)
 
     PLOT_COLORS = ['black', 'tab:red', 'tab:blue', 'tab:green']
-    SMOOTHING_WINDOW_LENGTH = 10
 
     env = Obstgarten(hps)
     if hps['agent']['type'] == "positive":
@@ -27,12 +27,16 @@ if __name__ == '__main__':
         agent = RandomAgent(hps, env)
     else:
         agent = Agent(hps, env)
-
+        if hps["agent"]["read_checkpoint"]:
+            checkpoint = torch.load("checkpoint.pt")
+            agent.actor.load_state_dict(checkpoint["net"])
+            agent.target.load_state_dict(checkpoint["net"])
+            agent.actor_opt.load_state_dict(checkpoint["opt"])
     current_time = datetime.now().strftime('%Y%m%d-%H%M%S')
-
     """
     TRAINING
     """
+    # agent.evaluation_mode = True
     score_outer = np.zeros(hps['agent']['batches'], dtype=float)
     score_inner = np.zeros(hps['agent']['games_per_batch'], dtype=float)
     iter_games = 0
@@ -61,16 +65,15 @@ if __name__ == '__main__':
             np.round(100*score_outer[batch_index], 1)))
 
     agent.finish_interaction()
+    checkpoint = {"net": agent.actor.state_dict(),
+                  "opt": agent.actor_opt.state_dict()}
+    torch.save(checkpoint, "checkpoint.pt")
+
     """
     PLOT TRAINING PROGRESS
     """
     fig, ax = plt.subplots()
-    plt.plot(score_outer, color=PLOT_COLORS[0], alpha=0.3)
-    score_smoothed = np.convolve(score_outer,
-                                 np.ones(SMOOTHING_WINDOW_LENGTH), 'valid') / SMOOTHING_WINDOW_LENGTH
-    score_smoothed = np.concatenate((score_outer[:SMOOTHING_WINDOW_LENGTH - 1], score_smoothed))
-    ax.plot(score_smoothed, label="Average reward (= winning probability)", color=PLOT_COLORS[0])
-
+    plt.plot(score_outer, color=PLOT_COLORS[0], label="Average reward (= winning probability)")
     plt.xlabel(f"Iterations of {hps['agent']['games_per_batch']} games")
     plt.ylabel("Winning probability")
     plt.legend()

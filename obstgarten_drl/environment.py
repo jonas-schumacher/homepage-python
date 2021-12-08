@@ -8,10 +8,12 @@ class Obstgarten:
         self.rng = np.random.default_rng()
         self.hps = hps
         if self.hps['agent']['one_hot_state']:
-            self.num_states_one_hot = hps['env']['num_tree'] * (hps['env']['num_fruit'] + 1) + (
+            self.num_states = hps['env']['num_tree'] * (hps['env']['num_fruit'] + 1) + (
                         hps['env']['num_raven'] + 1)
         else:
             self.num_states = hps['env']['num_tree'] + 1
+            if hps['agent']['additional_input']:
+                self.num_states += 1
         self.num_actions = hps['env']['num_tree']
         self.state = None
         self.remaining_baskets_to_choose = 0
