@@ -4,8 +4,7 @@ import numpy as np
 class Obstgarten:
 
     def __init__(self, hps):
-
-        self.rng = np.random.default_rng()
+        self.rng = np.random.default_rng(hps['env']['seed'])
         self.hps = hps
         if self.hps['agent']['one_hot_state']:
             self.num_states = hps['env']['num_tree'] * (hps['env']['num_fruit'] + 1) + (

@@ -7,7 +7,7 @@ class DQNNetwork(nn.Module):
     def __init__(self, num_inputs, num_actions, hidden, hps):
 
         super(DQNNetwork, self).__init__()
-
+        torch.manual_seed(hps['env']['seed'])
         self.hps = hps
 
         self.fc = nn.Sequential(

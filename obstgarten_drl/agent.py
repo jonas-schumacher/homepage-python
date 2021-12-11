@@ -27,11 +27,12 @@ class Agent:
 
         self.hps = hps
         self.env = env
+        torch.manual_seed(hps['env']['seed'])
 
         self.game_count = 0
         self.train_count = 0
         self.decision_count = 0
-        self.rng = np.random.default_rng()
+        self.rng = np.random.default_rng(hps['env']['seed'])
         self.evaluation_mode = False
 
         self.actor = DQNNetwork(num_inputs=self.env.num_states,
@@ -45,7 +46,7 @@ class Agent:
 
         self.actor_opt = torch.optim.Adam(self.actor.parameters(), lr=self.hps['dqn']['lr'])
 
-        self.buffer = ExperienceBuffer(capacity=self.hps['dqn']['replay_size'])
+        self.buffer = ExperienceBuffer(capacity=self.hps['dqn']['replay_size'], hps=hps)
         self.state = None
         self.action = None
 

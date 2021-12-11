@@ -36,7 +36,8 @@ if __name__ == '__main__':
     """
     TRAINING
     """
-    # agent.evaluation_mode = True
+    if hps['agent']['evaluation_mode']:
+        agent.evaluation_mode = True
     score_outer = np.zeros(hps['agent']['batches'], dtype=float)
     score_inner = np.zeros(hps['agent']['games_per_batch'], dtype=float)
     iter_games = 0

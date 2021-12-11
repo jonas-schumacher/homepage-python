@@ -5,9 +5,9 @@ Experience = collections.namedtuple('Experience', field_names=['state', 'action'
 
 
 class ExperienceBuffer:
-    def __init__(self, capacity):
+    def __init__(self, capacity, hps):
         self.buffer = collections.deque(maxlen=capacity)
-        self.rng = np.random.default_rng()
+        self.rng = np.random.default_rng(hps['env']['seed'])
 
     def __len__(self):
         return len(self.buffer)
