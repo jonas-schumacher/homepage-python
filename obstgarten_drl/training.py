@@ -66,9 +66,10 @@ if __name__ == '__main__':
             np.round(100*score_outer[batch_index], 1)))
 
     agent.finish_interaction()
-    checkpoint = {"net": agent.actor.state_dict(),
-                  "opt": agent.actor_opt.state_dict()}
-    torch.save(checkpoint, "checkpoint.pt")
+    if hps["agent"]["write_checkpoint"]:
+        checkpoint = {"net": agent.actor.state_dict(),
+                      "opt": agent.actor_opt.state_dict()}
+        torch.save(checkpoint, "checkpoint.pt")
 
     """
     PLOT TRAINING PROGRESS

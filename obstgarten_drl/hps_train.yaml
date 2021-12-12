@@ -10,22 +10,23 @@ env:
 agent:
   type: "trained"  # "positive", "negative", "random", "trained"
   batches: 10
-  games_per_batch: 10000
+  games_per_batch: 5000
   gamma: 1
   one_hot_state: False
   additional_input: False
-  read_checkpoint: True
+  read_checkpoint: False
+  write_checkpoint: True
   evaluation_mode: False
 
 dqn:
-  lr: 0.0005
+  lr: 0.002
   batch_size: 5000
   replay_start_size: 50000
   replay_size: 500000
   hidden_size: [20,10]
   eps:
     strategy: "linear"  # type of decay: constant, linear, exponential
-    start: 0.3
+    start: 1.0
     final: 0.05
     share: 0.9
   skip_train: 20
